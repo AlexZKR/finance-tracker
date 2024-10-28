@@ -1,21 +1,23 @@
 services:
   # Django main API service
-  finance-tracker:
+  django_finance:
     build: ./finance_project
     hostname: "finance_project"
     restart: on-failure
     ports:
       - "5000:8000"
     volumes:
-      - ./finance_project:/app
-    env_file:
-      - .env
+      - ./finance_project/finance_app:/app
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_HOST=${REDIS_HOST}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
     depends_on:
-      - postgres
+      - db
       - redis
 
   # FASTAPI budjet reports API service
-  finance_reports:
+  fastapi_reports:
     build: ./finance_reports
     hostname: "finance_reports"
     restart: on-failure
@@ -26,12 +28,18 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      - db
       - redis
 
   # postgersql db
-  postgres:
+  db:
     image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
