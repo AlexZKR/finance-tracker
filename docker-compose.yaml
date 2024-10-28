@@ -1,0 +1,49 @@
+services:
+  # Django main API service
+  finance-tracker:
+    build: ./finance_project
+    hostname: "finance_project"
+    restart: on-failure
+    ports:
+      - "5000:8000"
+    volumes:
+      - ./finance_project:/app
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+
+  # FASTAPI budjet reports API service
+  finance_reports:
+    build: ./finance_reports
+    hostname: "finance_reports"
+    restart: on-failure
+    ports:
+      - "5001:8080"
+    volumes:
+      - ./finance_reports:/app
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+
+  # postgersql db
+  postgres:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -d $${POSTGRES_DB} -U postgres
+      interval: 2s
+      retries: 10
+
+  # cache, celery brocker
+  redis:
+    image: redis:latest
+
+volumes:
+  postgres_data:
+
+
