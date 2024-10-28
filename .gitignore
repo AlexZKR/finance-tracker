@@ -129,6 +129,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+finance_project/django_env/
+finance_reports/fastapi_env/
 
 # Spyder project settings
 .spyderproject
