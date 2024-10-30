@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+AUTH_USER_MODEL = "finance_api.User"
 
 # Application definition
 
@@ -37,6 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "finance_api",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -77,8 +80,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "finance_db",
-        "USER": "postgres",  
-        "PASSWORD": "1234dsafhu",  
+        "USER": "postgres",
+        "PASSWORD": "1234dsafhu",
         "HOST": "db",
         "PORT": "5432",
     }
