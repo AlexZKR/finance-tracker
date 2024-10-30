@@ -13,6 +13,9 @@ from .models_choices import (
 class User(AbstractUser):
     pass
 
+    def __str__(self):
+        return f"{self.email} - {self.first_name} {self.last_name}"
+
 
 class Account(models.Model):
     name = models.CharField(max_length=100)
@@ -22,7 +25,7 @@ class Account(models.Model):
         max_length=7, choices=COLOR_CHOICES, default="#4CAF50"
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
 
     def __str__(self):
         return f"{self.name} - {self.amount} - {self.user}"
@@ -40,7 +43,9 @@ class Category(models.Model):
 
 
 class Transaction(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="transactions"
+    )
     category = models.ForeignKey(
         Category, on_delete=models.SET_DEFAULT, default="null_category", blank=False
     )
@@ -66,3 +71,6 @@ class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user} - {self.budget_type} - {self.amount}"
