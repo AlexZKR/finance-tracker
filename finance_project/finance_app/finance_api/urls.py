@@ -1,11 +1,19 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from . import views
+from .views import (
+    UserViewSet,
+    AccountViewSet,
+    TransactionViewSet,
+    CategoryViewSet,
+    BudgetViewSet,
+)
 
-urlpatterns = [
-    path("", views.api_root),
-    path("users/", views.UserList.as_view(), name="user-list"),
-    path("users/<int:pk>/", views.UserDetailed.as_view(), name="user-detail"),
-    path("accounts/", views.AccountList.as_view(), name="account-list"),
-    path("accounts/<int:pk>", views.AccountDetailed.as_view(), name="account-detail"),
-]
+router = DefaultRouter()
+router.register(r"users", UserViewSet)
+router.register(r"accounts", AccountViewSet)
+router.register(r"transactions", TransactionViewSet)
+router.register(r"categories", CategoryViewSet)
+router.register(r"budgets", BudgetViewSet)
+
+
+urlpatterns = [path("", include(router.urls))]

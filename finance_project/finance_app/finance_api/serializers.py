@@ -2,50 +2,83 @@ from rest_framework import serializers
 from .models import User, Account, Transaction, Budget, Category
 
 
-class AccountHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    transactions = serializers.StringRelatedField(many=True, read_only=True)
-    user = serializers.HyperlinkedRelatedField(
-        view_name="user-detail",  # Name of the URL pattern for the user detail view
-        queryset=User.objects.all(),  # Ensure the queryset is provided
-    )
-
-    class Meta:
-        model = Account
-        fields = "__all__"
-
-    def to_representation(self, instance):
-        # Get the original representation
-        representation = super().to_representation(instance)
-
-        # Add the email to the representation
-        representation["user_email"] = instance.user.email if instance.user else None
-
-        return representation
-
-
-class UserHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    accounts = AccountHyperlinkedSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = User
-        fields = ["first_name", "last_name", "email", "url", "accounts"]
-
-
-class TransactionHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
-    user = UserHyperlinkedSerializer(read_only=True)
+class TransactionSerializer(serializers.ModelSerializer):
+    account = serializers.PrimaryKeyRelatedField(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Transaction
-        fields = "__all__"
+        fields = [
+            "account",
+            "category",
+            "user",
+            "transaction_type",
+            "date",
+            "description",
+            "amount",
+        ]
 
 
-class BudgetHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
+    transactions = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Transaction.objects.all()
+    )
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
-        model = Budget
-        fields = "__all__"
+        model = Account
+        fields = [
+            "id",
+            "name",
+            "currency",
+            "amount",
+            "display_color",
+            "user",
+            "transactions",
+        ]
 
 
-class CategoryHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = ["name", "user", "display_color"]
+
+
+class BudgetSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    account = serializers.PrimaryKeyRelatedField(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Budget
+        fields = [
+            "budget_type",
+            "amount",
+            "start_date",
+            "end_date",
+            "user",
+            "account",
+            "category",
+        ]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    accounts = AccountSerializer(many=True)
+    categories = CategorySerializer(many=True)
+    budgets = BudgetSerializer(many=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "accounts",
+            "categories",
+            "budgets",
+        ]

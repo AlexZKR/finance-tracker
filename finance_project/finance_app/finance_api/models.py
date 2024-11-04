@@ -49,7 +49,8 @@ class Transaction(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.SET_DEFAULT, default="null_category", blank=False
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
+
     transaction_type = models.CharField(
         choices=TRANSACTION_TYPES, max_length=2, default="EX"
     )
@@ -68,9 +69,13 @@ class Budget(models.Model):
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField()
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="budgets")
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="budgets"
+    )
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="budgets"
+    )
 
     def __str__(self):
         return f"{self.user} - {self.budget_type} - {self.amount}"
