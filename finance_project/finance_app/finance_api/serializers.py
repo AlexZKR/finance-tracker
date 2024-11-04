@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import (
     AccountBudget,
+    BaseCategory,
     CategoryBudget,
     User,
     Account,
@@ -46,12 +47,25 @@ class AccountSerializer(serializers.ModelSerializer):
         ]
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class BaseCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BaseCategory
+        fields = ["id", "name"]
+
+
+class UserCategorySerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    base_category_id = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = UserCategory
-        fields = ["name", "user_id", "display_color"]
+        fields = [
+            "id",
+            "user_id",
+            "custom_name",
+            "base_category_id",
+            "display_color",
+        ]
 
 
 class AccountBudgetSerializer(serializers.ModelSerializer):
@@ -94,7 +108,7 @@ class CategoryBudgetSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     accounts = AccountSerializer(many=True)
-    categories = CategorySerializer(many=True)
+    categories = UserCategorySerializer(many=True)
     account_budgets = AccountBudgetSerializer(many=True)
 
     class Meta:
@@ -107,5 +121,5 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "accounts",
             "categories",
-            "budgets",
+            "account_budgets",
         ]
