@@ -1,9 +1,10 @@
-from .models import Account, Transaction, User, UserCategory
+from .models import Account, BaseCategory, Transaction, User, UserCategory
 from .serializers import (
     AccountSerializer,
+    BaseCategorySerializer,
     TransactionSerializer,
     UserSerializer,
-    CategorySerializer,
+    UserCategorySerializer,
 )
 from rest_framework.viewsets import ModelViewSet
 
@@ -23,6 +24,11 @@ class TransactionViewSet(ModelViewSet):
     serializer_class = TransactionSerializer
 
 
-class CategoryViewSet(ModelViewSet):
+class UserCategoryViewSet(ModelViewSet):
     queryset = UserCategory.objects.all()
-    serializer_class = CategorySerializer
+    serializer_class = UserCategorySerializer
+
+
+class BaseCategoryViewSet(ModelViewSet):
+    queryset = BaseCategory.objects.all()
+    serializer_class = BaseCategorySerializer

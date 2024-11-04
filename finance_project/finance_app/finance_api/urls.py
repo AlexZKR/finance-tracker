@@ -1,18 +1,19 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from .views import (
+    BaseCategoryViewSet,
     UserViewSet,
     AccountViewSet,
     TransactionViewSet,
-    CategoryViewSet,
+    UserCategoryViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"users", UserViewSet)
 router.register(r"accounts", AccountViewSet)
 router.register(r"transactions", TransactionViewSet)
-router.register(r"categories", CategoryViewSet)
-
+router.register(r"user_categories", UserCategoryViewSet)
+router.register(r"base_categories", BaseCategoryViewSet)
 
 
 urlpatterns = [path("", include(router.urls))]
