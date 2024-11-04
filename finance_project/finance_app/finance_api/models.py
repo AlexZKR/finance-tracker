@@ -14,7 +14,7 @@ class User(AbstractUser):
     pass
 
     def __str__(self):
-        return f"{self.email} - {self.first_name} {self.last_name}"
+        return f"{self.email} - {self.username}"
 
 
 class Account(models.Model):
@@ -48,8 +48,17 @@ class UserCategory(models.Model):
         max_length=7, choices=COLOR_CHOICES, default="#4CAF50"
     )
 
-    class Meta:
-        unique_together = ("user", "base_category", "custom_name")
+    def clean(self):
+        if UserCategory.objects.filter(
+            user=self.user,
+            base_category=self.base_category,
+            custom_name=self.custom_name,
+        ):
+            raise ValidationError("UserCategory must be unique!")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.custom_name if self.custom_name else self.base_category.name
@@ -105,15 +114,6 @@ class CategoryBudget(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField(auto_now_add=True)
     end_date = models.DateField()
-
-    class Meta:
-        unique_together = (
-            "user",
-            "base_category",
-            "user_category",
-            "start_date",
-            "end_date",
-        )
 
     def clean(self):
         """
