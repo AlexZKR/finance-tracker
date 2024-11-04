@@ -263,50 +263,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="Budget",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                (
-                    "budget_type",
-                    models.CharField(
-                        choices=[("M", "Monthly"), ("C", "Category"), ("A", "Account")]
-                    ),
-                ),
-                ("amount", models.DecimalField(decimal_places=2, max_digits=10)),
-                ("start_date", models.DateField(auto_now_add=True)),
-                ("end_date", models.DateField()),
-                (
-                    "account",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="finance_api.account",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
-                    "category",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="finance_api.category",
-                    ),
-                ),
-            ],
-        ),
-        migrations.CreateModel(
             name="Transaction",
             fields=[
                 (

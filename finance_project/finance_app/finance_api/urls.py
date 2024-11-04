@@ -5,7 +5,6 @@ from .views import (
     AccountViewSet,
     TransactionViewSet,
     CategoryViewSet,
-    BudgetViewSet,
 )
 
 router = DefaultRouter()
@@ -13,7 +12,7 @@ router.register(r"users", UserViewSet)
 router.register(r"accounts", AccountViewSet)
 router.register(r"transactions", TransactionViewSet)
 router.register(r"categories", CategoryViewSet)
-router.register(r"budgets", BudgetViewSet)
+
 
 
 urlpatterns = [path("", include(router.urls))]

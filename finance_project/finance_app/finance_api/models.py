@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.forms import ValidationError
 
 from .models_choices import (
     CURRENCY_CHOICES,
     COLOR_CHOICES,
     CATEGORY_CHOICES,
     TRANSACTION_TYPES,
-    BUDGET_TYPES,
 )
 
 
@@ -31,15 +31,28 @@ class Account(models.Model):
         return f"{self.name} - {self.amount} - {self.user}"
 
 
-class Category(models.Model):
+class BaseCategory(models.Model):
     name = models.CharField(choices=CATEGORY_CHOICES)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class UserCategory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
+    base_category = models.ForeignKey(
+        BaseCategory, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    custom_name = models.CharField(max_length=100, blank=True, null=True)
     display_color = models.CharField(
         max_length=7, choices=COLOR_CHOICES, default="#4CAF50"
     )
 
+    class Meta:
+        unique_together = ("user", "base_category", "custom_name")
+
     def __str__(self):
-        return self.name
+        return self.custom_name if self.custom_name else self.base_category.name
 
 
 class Transaction(models.Model):
@@ -47,9 +60,9 @@ class Transaction(models.Model):
         Account, on_delete=models.CASCADE, related_name="transactions"
     )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_DEFAULT, default="null_category", blank=False
+        UserCategory, on_delete=models.SET_DEFAULT, default="null_category", blank=False
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="categories")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction")
 
     transaction_type = models.CharField(
         choices=TRANSACTION_TYPES, max_length=2, default="EX"
@@ -62,20 +75,65 @@ class Transaction(models.Model):
         return f"{self.account} - {self.transaction_type} - {self.amount}"
 
 
-class Budget(models.Model):
-    budget_type = models.CharField(choices=BUDGET_TYPES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-
-    start_date = models.DateField(auto_now_add=True)
-    end_date = models.DateField()
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="budgets")
+class AccountBudget(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="account_budgets"
+    )
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="budgets"
     )
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name="budgets"
-    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField()
 
     def __str__(self):
-        return f"{self.user} - {self.budget_type} - {self.amount}"
+        return f"{self.user} - AccBudg for {self.account.name}: {self.amount}"
+
+
+class CategoryBudget(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="category_budgets"
+    )
+    user_category = models.ForeignKey(
+        UserCategory,
+        on_delete=models.CASCADE,
+    )
+    base_category = models.ForeignKey(
+        BaseCategory,
+        on_delete=models.CASCADE,
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField()
+
+    class Meta:
+        unique_together = (
+            "user",
+            "base_category",
+            "user_category",
+            "start_date",
+            "end_date",
+        )
+
+    def clean(self):
+        """
+        Custom model validation rules
+        """
+        if self.base_category and self.user_category:
+            raise ValidationError(
+                "Only one of base_category or user_category should be set."
+            )
+        if not self.base_category and not self.user_category:
+            raise ValidationError("One of base_category or user_category must be set.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        category_name = (
+            self.user_category.custom_name
+            if self.user_category
+            else self.base_category.name
+        )
+        return f"{self.user} - Budget for {category_name}: {self.amount}"

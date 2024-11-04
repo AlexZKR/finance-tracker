@@ -1,5 +1,5 @@
 from django.contrib import admin
-from finance_api.models import Transaction, Category, User, Account, Budget
+from finance_api.models import Transaction, UserCategory, User, Account
 
 
 # @admin.register(User)
@@ -8,7 +8,8 @@ from finance_api.models import Transaction, Category, User, Account, Budget
 
 
 # Register your models here.
-admin.site.register(Transaction)
-admin.site.register(Category)
 admin.site.register(Account)
-admin.site.register(Budget)
+admin.site.register(User)
+admin.site.register(Transaction)
+admin.site.register(UserCategory)
+

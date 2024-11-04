@@ -29,12 +29,6 @@ TRANSACTION_TYPES = [
     ("TR", "Transfer"),
 ]
 
-BUDGET_TYPES = [
-    ("M", "Monthly"),
-    ("C", "Category"),
-    ("A", "Account"),
-]
-
 CATEGORY_CHOICES = [
     ("salary", "Salary"),
     ("freelance", "Freelance"),
