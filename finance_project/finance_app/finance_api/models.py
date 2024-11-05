@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.forms import ValidationError
@@ -100,16 +102,18 @@ class AccountBudget(models.Model):
 
 
 class CategoryBudget(models.Model):
+    """
+    Budget for category (i.e. Category: Food; )
+    """
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="category_budgets"
     )
     user_category = models.ForeignKey(
-        UserCategory,
-        on_delete=models.CASCADE,
+        UserCategory, on_delete=models.CASCADE, blank=True, null=True
     )
     base_category = models.ForeignKey(
-        BaseCategory,
-        on_delete=models.CASCADE,
+        BaseCategory, on_delete=models.CASCADE, blank=True, null=True
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField(auto_now_add=True)
@@ -125,6 +129,12 @@ class CategoryBudget(models.Model):
             )
         if not self.base_category and not self.user_category:
             raise ValidationError("One of base_category or user_category must be set.")
+        if self.start_date > self.end_date:
+            raise ValidationError("Start date can't be earlier than end date")
+        if self.start_date < date.today():
+            raise ValidationError("Start date can't be earlier than today")
+        if self.amount <= 0:
+            raise ValidationError("Amount must be greater than 0")
 
     def save(self, *args, **kwargs):
         self.clean()
