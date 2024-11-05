@@ -6,7 +6,6 @@ from django.forms import ValidationError
 
 from .models_choices import (
     CURRENCY_CHOICES,
-    COLOR_CHOICES,
     CATEGORY_CHOICES,
     TRANSACTION_TYPES,
 )
@@ -23,11 +22,16 @@ class Account(models.Model):
     name = models.CharField(max_length=100)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="BYN")
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    display_color = models.CharField(
-        max_length=7, choices=COLOR_CHOICES, default="#4CAF50"
-    )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
+
+    def clean(self):
+        if self.amount < 0:
+            raise ValidationError("Amount must be greater than zero!")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} - {self.amount} - {self.user}"
@@ -46,9 +50,6 @@ class UserCategory(models.Model):
         BaseCategory, on_delete=models.SET_NULL, null=True, blank=True
     )
     custom_name = models.CharField(max_length=100, blank=True, null=True)
-    display_color = models.CharField(
-        max_length=7, choices=COLOR_CHOICES, default="#4CAF50"
-    )
 
     def clean(self):
         if UserCategory.objects.filter(

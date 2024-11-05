@@ -3,9 +3,25 @@ from datetime import date, timedelta
 
 from django.forms import ValidationError
 from django.test import TestCase
-from ..models import BaseCategory, CategoryBudget, UserCategory, User
-from rest_framework.test import APIClient
-from rest_framework import status
+from ..models import BaseCategory, Account, CategoryBudget, UserCategory, User
+from ..models_choices import CURRENCY_CHOICES
+
+
+class AccountModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="testUser", password="password")
+
+    def test_valid_model_passes(self):
+        try:
+            Account.objects.create(
+                user=self.user, currency=CURRENCY_CHOICES[0][0], amount=1000
+            )
+        except Exception as e:
+            self.fail(f"Valid model creation failed with exception: {e}")
+
+    def test_amount_greater_than_zero(self):
+        with self.assertRaises(ValidationError):
+            Account.objects.create(user=self.user, amount=-1)
 
 
 class UserCategoryModelTest(TestCase):
@@ -13,6 +29,14 @@ class UserCategoryModelTest(TestCase):
         self.user = User.objects.create(username="testUser", password="password")
         self.test_base_category = BaseCategory.objects.create(name="groceries")
         self.custom_name = "custom name"
+
+    def test_valid_model_passes(self):
+        try:
+            UserCategory.objects.create(
+                user=self.user, base_category=self.test_base_category
+            )
+        except Exception as e:
+            self.fail(f"Valid model creation failed with exception: {e}")
 
     def test_create_user_category_with_base_category(self):
         """
@@ -109,7 +133,6 @@ class CategoryBudgetModelTest(TestCase):
             )
 
     def test_start_date_is_later_than_end_date(self):
-        
         with self.assertRaises(ValidationError):
             CategoryBudget.objects.create(
                 user=self.user,
@@ -128,6 +151,7 @@ class CategoryBudgetModelTest(TestCase):
                 end_date=self.tomorrow,
                 amount=100,
             )
+
     def test_amount_is_greater_that_zero(self):
         with self.assertRaises(ValidationError):
             CategoryBudget.objects.create(
@@ -137,5 +161,3 @@ class CategoryBudgetModelTest(TestCase):
                 end_date=self.tomorrow,
                 amount=-1,
             )
-        
-
