@@ -1,7 +1,27 @@
+from datetime import date, timedelta
+
+
+from django.forms import ValidationError
 from django.test import TestCase
-from ..models import BaseCategory, UserCategory, User
-from rest_framework.test import APIClient
-from rest_framework import status
+from ..models import BaseCategory, Account, CategoryBudget, UserCategory, User
+from ..models_choices import CURRENCY_CHOICES
+
+
+class AccountModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="testUser", password="password")
+
+    def test_valid_model_passes(self):
+        try:
+            Account.objects.create(
+                user=self.user, currency=CURRENCY_CHOICES[0][0], amount=1000
+            )
+        except Exception as e:
+            self.fail(f"Valid model creation failed with exception: {e}")
+
+    def test_amount_greater_than_zero(self):
+        with self.assertRaises(ValidationError):
+            Account.objects.create(user=self.user, amount=-1)
 
 
 class UserCategoryModelTest(TestCase):
@@ -9,6 +29,14 @@ class UserCategoryModelTest(TestCase):
         self.user = User.objects.create(username="testUser", password="password")
         self.test_base_category = BaseCategory.objects.create(name="groceries")
         self.custom_name = "custom name"
+
+    def test_valid_model_passes(self):
+        try:
+            UserCategory.objects.create(
+                user=self.user, base_category=self.test_base_category
+            )
+        except Exception as e:
+            self.fail(f"Valid model creation failed with exception: {e}")
 
     def test_create_user_category_with_base_category(self):
         """
@@ -66,4 +94,70 @@ class UserCategoryModelTest(TestCase):
 
 
 class CategoryBudgetModelTest(TestCase):
-    pass
+    def setUp(self):
+        self.user = User.objects.create(username="test_User", password="1234")
+        self.base_category = BaseCategory.objects.create(name="test_base_cat")
+        self.user_category = UserCategory.objects.create(
+            user=self.user,
+            base_category=self.base_category,
+            custom_name="test_custom_cat",
+        )
+        self.today = date.today()
+        self.tomorrow = date.today() + timedelta(days=1)
+        self.yesterday = date.today() - timedelta(days=1)
+
+    def test_valid_object_passes(self):
+        try:
+            CategoryBudget.objects.create(
+                user=self.user,
+                user_category=self.user_category,
+                amount=100,
+                start_date=self.today,
+                end_date=self.tomorrow,
+            )
+        except Exception as e:
+            self.fail(f"Valid object creation failed with exception {e}")
+
+    def test_only_base_or_user_cat_is_set(self):
+        with self.assertRaises(ValidationError):
+            CategoryBudget.objects.create(
+                user=self.user,
+                user_category=self.user_category,
+                base_category=self.base_category,
+            )
+
+    def test_either_base_or_user_cat_is_set(self):
+        with self.assertRaises(ValidationError):
+            CategoryBudget.objects.create(
+                user=self.user,
+            )
+
+    def test_start_date_is_later_than_end_date(self):
+        with self.assertRaises(ValidationError):
+            CategoryBudget.objects.create(
+                user=self.user,
+                base_category=self.base_category,
+                start_date=date.today(),
+                end_date=self.yesterday,
+                amount=100,
+            )
+
+    def test_start_date_is_today_or_later(self):
+        with self.assertRaises(ValidationError):
+            CategoryBudget.objects.create(
+                user=self.user,
+                base_category=self.base_category,
+                start_date=self.yesterday,
+                end_date=self.tomorrow,
+                amount=100,
+            )
+
+    def test_amount_is_greater_that_zero(self):
+        with self.assertRaises(ValidationError):
+            CategoryBudget.objects.create(
+                user=self.user,
+                base_category=self.base_category,
+                start_date=self.today,
+                end_date=self.tomorrow,
+                amount=-1,
+            )
