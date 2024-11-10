@@ -8,8 +8,8 @@ from .views import (
     UserCategoryViewSet,
 )
 
-router = DefaultRouter()
-router.register(r"users", UserViewSet)
+router = DefaultRouter(trailing_slash=False)
+router.register(r"users", UserViewSet, basename="user")
 router.register(r"accounts", AccountViewSet)
 router.register(r"transactions", TransactionViewSet)
 router.register(r"user_categories", UserCategoryViewSet)
