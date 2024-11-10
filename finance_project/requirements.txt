@@ -2,5 +2,10 @@ django
 djangorestframework
 psycopg2
 redis
+django-redis
 django-environ
 coverage
+djangorestframework-simplejwt
+pyyaml
+inflection
+uritemplate
