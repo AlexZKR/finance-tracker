@@ -10,7 +10,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsOwnerOrAdmin
 from rest_framework.permissions import AllowAny
@@ -62,6 +62,8 @@ class AccountViewSet(ModelViewSet):
     permission_classes = [IsOwnerOrAdmin]
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied("You must be logged in to access this resource.")
         if self.request.user.is_staff:
             return Account.objects.all()
         return Account.objects.filter(user=self.request.user)

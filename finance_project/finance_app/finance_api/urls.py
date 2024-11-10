@@ -40,6 +40,7 @@ urlpatterns = [
             title="Personal finance tracker app",
             description="Finance tracker API",
             version="1.0.0",
+            permission_classes=[AllowAny]
         ),
         name="openapi-schema",
     ),
