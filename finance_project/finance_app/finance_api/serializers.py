@@ -42,7 +42,6 @@ class AccountSerializer(serializers.ModelSerializer):
             "name",
             "currency",
             "amount",
-            "display_color",
             "transactions",
         ]
 
@@ -64,7 +63,6 @@ class UserCategorySerializer(serializers.ModelSerializer):
             "user_id",
             "custom_name",
             "base_category_id",
-            "display_color",
         ]
 
 
@@ -107,9 +105,9 @@ class CategoryBudgetSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    accounts = AccountSerializer(many=True)
-    categories = UserCategorySerializer(many=True)
-    account_budgets = AccountBudgetSerializer(many=True)
+    accounts = AccountSerializer(many=True, required=False)
+    categories = UserCategorySerializer(many=True, required=False)
+    account_budgets = AccountBudgetSerializer(many=True, required=False)
 
     class Meta:
         model = User

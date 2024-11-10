@@ -14,8 +14,13 @@ from .models_choices import (
 class User(AbstractUser):
     pass
 
+    email = models.EmailField(unique=True)
+
     def __str__(self):
-        return f"{self.email} - {self.username}"
+        if self.username:
+            return f"{self.email} - {self.username}"
+        else:
+            return f"{self.email}"
 
 
 class Account(models.Model):

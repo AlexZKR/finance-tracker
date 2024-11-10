@@ -7,9 +7,54 @@ from ..models import BaseCategory, Account, CategoryBudget, UserCategory, User
 from ..models_choices import CURRENCY_CHOICES
 
 
+class UserModelTest(TestCase):
+    def setUp(self):
+        self.test_email_1 = "test_email_1@gmail.com"
+        self.test_email_2 = "test_email_2@gmail.com"
+        self.test_user_name_1 = "test_username_1"
+        self.test_user_name_2 = "test_username_2"
+        self.test_password = "jfUFh81387_018!"
+
+    def test_valid_model_passes(self):
+        try:
+            User.objects.create_user(
+                email=self.test_email_1,
+                username=self.test_user_name_1,
+                password=self.test_password,
+            )
+        except Exception as e:
+            self.fail(f"Valid model creation failed with exception: {e}")
+
+    def test_email_unique(self):
+        with self.assertRaises(Exception):
+            User.objects.create_user(
+                email=self.test_email_1,
+                username=self.test_user_name_1,
+                password=self.test_password,
+            )
+            User.objects.create_user(
+                email=self.test_email_1,
+                username=self.test_user_name_2,
+                password=self.test_password,
+            )
+
+    def test_username_unique(self):
+        with self.assertRaises(Exception):
+            User.objects.create_user(
+                email=self.test_email_1,
+                username=self.test_user_name_1,
+                password=self.test_password,
+            )
+            User.objects.create_user(
+                email=self.test_email_2,
+                username=self.test_user_name_1,
+                password=self.test_password,
+            )
+
+
 class AccountModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="testUser", password="password")
+        self.user = User.objects.create_user(username="testUser", password="password")
 
     def test_valid_model_passes(self):
         try:
@@ -26,7 +71,7 @@ class AccountModelTest(TestCase):
 
 class UserCategoryModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="testUser", password="password")
+        self.user = User.objects.create_user(username="testUser", password="password")
         self.test_base_category = BaseCategory.objects.create(name="groceries")
         self.custom_name = "custom name"
 
@@ -95,7 +140,7 @@ class UserCategoryModelTest(TestCase):
 
 class CategoryBudgetModelTest(TestCase):
     def setUp(self):
-        self.user = User.objects.create(username="test_User", password="1234")
+        self.user = User.objects.create_user(username="test_User", password="1234")
         self.base_category = BaseCategory.objects.create(name="test_base_cat")
         self.user_category = UserCategory.objects.create(
             user=self.user,
