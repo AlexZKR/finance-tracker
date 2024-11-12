@@ -1,3 +1,4 @@
+import logging
 from .models import Account, BaseCategory, Transaction, User, UserCategory
 from .serializers import (
     AccountSerializer,
@@ -7,18 +8,55 @@ from .serializers import (
     UserCategorySerializer,
 )
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import IsOwnerOrAdmin
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .auth import IsOwnerOrAdmin
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .auth import JWTBlackList, RedisJWTAuthentication
+
+logger = logging.getLogger("__name__")
 
 
-class CustomLoginView(TokenObtainPairView):
+class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
+
+class RefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
+    # authentication_classes = [RedisJWTAuthentication]
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            access_token = request.data.get("access")
+            if not refresh_token:
+                return Response(
+                    {"detail": "Refresh token is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not access_token:
+                return Response(
+                    {"detail": "Access token is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            are_blacklisted = JWTBlackList().blacklist_tokens(access_token, refresh_token)
+            if are_blacklisted:
+                return Response(
+                    {"detail": "Logout successful"},
+                    status=status.HTTP_204_NO_CONTENT,
+                )
+
+        except Exception as e:
+            logger.error(f"Logout failed: {e}")
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(ModelViewSet):
@@ -44,17 +82,6 @@ class UserViewSet(ModelViewSet):
             )
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["post"], url_path="logout")
-    def logout(self, request):
-        try:
-            refresh_token = RefreshToken(request.data["refresh"])
-            refresh_token.blacklist()
-            return Response(
-                data="User logout successful", status=status.HTTP_204_NO_CONTENT
-            )
-        except Exception as e:
-            return Response(data=e.__str__(), status=status.HTTP_400_BAD_REQUEST)
 
 
 class AccountViewSet(ModelViewSet):

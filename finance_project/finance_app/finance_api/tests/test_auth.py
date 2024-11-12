@@ -1,11 +1,60 @@
+import logging
 from .base_test_setup import BaseTestSetup
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
+
+
+logger = logging.getLogger("__name__")
+
+
+class LogoutAPITest(BaseTestSetup):
+    def test_redis_read_write(self):
+        tmp = "test_redis_key"
+        result = self.redis_conn.setex(tmp, 3000, "true")
+        logger.debug(f"Result writing to redis {result}")
+        self.assertEqual(result, True)
+        reading = self.redis_conn.exists(tmp)
+        logger.debug(f"Result exists in redis {reading}")
+        self.assertEqual(reading, True)
+
+    def test_double_logout(self):
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.logout_url,
+            data={"access": creds["access"], "refresh": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        response = self.client.post(
+            self.logout_url,
+            data={"access": creds["access"], "refresh": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_logout_view(self):
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.logout_url,
+            data={"access": creds["access"], "refresh": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_logout_only_for_authorized(self):
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.logout_url,
+            data={"access": creds["access"], "refresh": creds["refresh"]},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class LoginAPITest(BaseTestSetup):
     def test_valid_user_login(self):
         response = self.client.post(
-            self.login_url, {"username": self.username_user_1, "password": self.password}
+            self.login_url,
+            {"username": self.username_user_1, "password": self.password},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, "access")

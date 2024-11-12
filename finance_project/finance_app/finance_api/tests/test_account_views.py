@@ -3,8 +3,6 @@ from .base_test_setup import BaseTestSetup
 
 
 class AccountViewsTest(BaseTestSetup):
-    
-
     def test_user_cant_retreive_others_account(self):
         "Ensure that user can't retreive the account of other user by id"
         user_1_cred = super().login_user(username=self.username_user_1)

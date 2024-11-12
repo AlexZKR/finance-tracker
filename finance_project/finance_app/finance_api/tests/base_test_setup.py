@@ -1,6 +1,7 @@
 from django.test import TestCase
 from ..models import User, Account, BaseCategory, UserCategory
 from rest_framework.test import APIClient
+from django_redis import get_redis_connection
 
 
 class BaseTestSetup(TestCase):
@@ -9,6 +10,7 @@ class BaseTestSetup(TestCase):
         cls.client = APIClient()
 
         cls.login_url = "/api/auth/login"
+        cls.logout_url = "/api/auth/logout"
         cls.register_url = "/api/auth/register"
         cls.accounts_list_url = "/api/accounts"
 
@@ -54,6 +56,9 @@ class BaseTestSetup(TestCase):
             base_category=cls.base_category,
             custom_name="test_custom_cat",
         )
+
+        cls.redis_conn = get_redis_connection("default")
+
         return super().setUpTestData()
 
     def login_user(self, username, password="1234"):
@@ -85,3 +90,6 @@ class BaseTestSetup(TestCase):
             "access": response_data["access"],
             "refresh": response_data["refresh"],
         }
+
+    def tearDown(self):
+        self.redis_conn.flushdb()
