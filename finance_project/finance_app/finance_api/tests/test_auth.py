@@ -1,7 +1,7 @@
 import logging
 from .base_test_setup import BaseTestSetup
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
+from django.core.cache import cache
 
 
 logger = logging.getLogger("__name__")
@@ -9,15 +9,23 @@ logger = logging.getLogger("__name__")
 
 class LogoutAPITest(BaseTestSetup):
     def test_redis_read_write(self):
+        """
+        Test reading and writing to redis db
+        """
         tmp = "test_redis_key"
-        result = self.redis_conn.setex(tmp, 3000, "true")
+        result = cache.set(key=tmp, value="test_key_value", timeout=3000)
         logger.debug(f"Result writing to redis {result}")
         self.assertEqual(result, True)
-        reading = self.redis_conn.exists(tmp)
+        reading = cache.has_key(tmp)
         logger.debug(f"Result exists in redis {reading}")
         self.assertEqual(reading, True)
+        cache.delete(tmp)
 
     def test_double_logout(self):
+        """
+        Test if a user that is logged out cannot use protected endpoints with
+        the same tokens
+        """
         creds = self.login_user(self.username_user_1)
         response = self.client.post(
             self.logout_url,
@@ -42,12 +50,16 @@ class LogoutAPITest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_logout_only_for_authorized(self):
+        """
+        An authorized request must include Authorization header with JWT
+        """
         creds = self.login_user(self.username_user_1)
         response = self.client.post(
             self.logout_url,
             data={"access": creds["access"], "refresh": creds["refresh"]},
+            # headers={"Authorization": f"Bearer {creds["access"]}"},
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class LoginAPITest(BaseTestSetup):

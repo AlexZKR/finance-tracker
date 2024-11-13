@@ -11,7 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 from rest_framework.exceptions import PermissionDenied
 
 from .auth import IsOwnerOrAdmin
@@ -24,6 +24,7 @@ logger = logging.getLogger("__name__")
 
 class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
+
 
 class RefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
@@ -47,7 +48,9 @@ class LogoutView(APIView):
                     {"detail": "Access token is required."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            are_blacklisted = JWTBlackList().blacklist_tokens(access_token, refresh_token)
+            are_blacklisted = JWTBlackList().blacklist_tokens(
+                access_token, refresh_token
+            )
             if are_blacklisted:
                 return Response(
                     {"detail": "Logout successful"},
