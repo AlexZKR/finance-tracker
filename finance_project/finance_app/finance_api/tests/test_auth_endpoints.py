@@ -1,23 +1,100 @@
 import logging
 from .base_test_setup import BaseTestSetup
 from rest_framework import status
-from rest_framework.exceptions import AuthenticationFailed
+
+from django.core.cache import cache
 
 
 logger = logging.getLogger("__name__")
 
 
-class LogoutAPITest(BaseTestSetup):
+class VerifyAuthEndpointTest(BaseTestSetup):
+    def test_verify_endpoint_is_authenticated_only(self):
+        """
+        Assert that verify endpoint is restricted only for authenticated users
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.verify_url,
+            data={"refresh": creds["access"]},  # not providing auth header
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_valid_verify_case(self):
+        """
+        Assert that authenticated user can verify any token
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.verify_url,
+            data={"token": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class RefreshAuthEndpointTest(BaseTestSetup):
+    """
+    Test refresh tokens endpoint
+    """
+
+    def test_refresh_is_authenticated_only(self):
+        """
+        Assert that refresh endpoint is restricted only for authenticated users
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.refresh_url,
+            data={"refresh": creds["access"]},  # not providing auth header
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+            msg="When trying to access without auth header, valid refresh jwt endpoint did not return 403 forbidden",
+        )
+
+    def test_valid_refresh_case(self):
+        """
+        Assert that user can refresh his access token using refresh token
+        and that response contains new access token
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.refresh_url,
+            data={"refresh": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            msg="Valid refresh jwt endpoint did not return 200 OK",
+        )
+        self.assertRegex(
+            response.data["access"],
+            expected_regex=self.jwt_regexp,
+            msg="Valid refresh jwt endpoint returned jwt did not match reg exp",
+        )
+
+
+class LogoutAuthEndpointTest(BaseTestSetup):
     def test_redis_read_write(self):
+        """
+        Test reading and writing to redis db
+        """
         tmp = "test_redis_key"
-        result = self.redis_conn.setex(tmp, 3000, "true")
+        result = cache.set(key=tmp, value="test_key_value", timeout=3000)
         logger.debug(f"Result writing to redis {result}")
         self.assertEqual(result, True)
-        reading = self.redis_conn.exists(tmp)
+        reading = cache.has_key(tmp)
         logger.debug(f"Result exists in redis {reading}")
         self.assertEqual(reading, True)
+        cache.delete(tmp)
 
     def test_double_logout(self):
+        """
+        Test if a user that is logged out cannot use protected endpoints with
+        the same tokens
+        """
         creds = self.login_user(self.username_user_1)
         response = self.client.post(
             self.logout_url,
@@ -42,15 +119,19 @@ class LogoutAPITest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_logout_only_for_authorized(self):
+        """
+        An authorized request must include Authorization header with JWT
+        """
         creds = self.login_user(self.username_user_1)
         response = self.client.post(
             self.logout_url,
             data={"access": creds["access"], "refresh": creds["refresh"]},
+            # headers={"Authorization": f"Bearer {creds["access"]}"},
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class LoginAPITest(BaseTestSetup):
+class LoginAuthEndpointTest(BaseTestSetup):
     def test_valid_user_login(self):
         response = self.client.post(
             self.login_url,
@@ -67,7 +148,7 @@ class LoginAPITest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class RegistrarionAPITest(BaseTestSetup):
+class RegistrarionAuthEndpointTest(BaseTestSetup):
     def test_valid_user_registration(self):
         "Valid test case"
         response = self.client.post(
