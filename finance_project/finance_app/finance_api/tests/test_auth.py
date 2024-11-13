@@ -7,6 +7,54 @@ from django.core.cache import cache
 logger = logging.getLogger("__name__")
 
 
+class RefreshAPITest(BaseTestSetup):
+    """
+    Test refresh tokens logic
+    """
+
+    def test_access_cant_be_used_for_refreshing(self):
+        """
+        Assert that access token cant be used for refreshing
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.refresh_url,
+            data={"refresh": creds["access"]},  # sending access instead of refresh
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response_data = response.json()  # Parse JSON content
+        self.assertIn("Token has wrong type", response_data.get("detail", ""))
+
+    def test_refresh_is_authenticated_only(self):
+        """
+        Assert that refresh endpoint is restricted only for authenticated users
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.refresh_url,
+            data={"refresh": creds["access"]},  # not providing auth header
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_valid_refresh_case(self):
+        """
+        Assert that user can refresh his access token using refresh token
+        and that response contains new access token
+        """
+        creds = self.login_user(self.username_user_1)
+        response = self.client.post(
+            self.refresh_url,
+            data={"refresh": creds["refresh"]},
+            headers={"Authorization": f"Bearer {creds["access"]}"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertRegex(
+            response.data["access"],
+            expected_regex=r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)",
+        )
+
+
 class LogoutAPITest(BaseTestSetup):
     def test_redis_read_write(self):
         """

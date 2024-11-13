@@ -11,7 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 
 from .auth import IsOwnerOrAdmin
@@ -27,8 +27,8 @@ class LoginView(TokenObtainPairView):
 
 
 class RefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
-    # authentication_classes = [RedisJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [RedisJWTAuthentication]
 
 
 class LogoutView(APIView):

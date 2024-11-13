@@ -11,6 +11,8 @@ class BaseTestSetup(TestCase):
         cls.login_url = "/api/auth/login"
         cls.logout_url = "/api/auth/logout"
         cls.register_url = "/api/auth/register"
+        cls.refresh_url = "/api/auth/refresh"
+        
         cls.accounts_list_url = "/api/accounts"
 
         cls.username_user_1 = "testuser1"
