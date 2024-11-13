@@ -9,11 +9,10 @@ from .views import (
     LoginView,
     LogoutView,
     RefreshView,
+    VerifyView,
 )
 from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.views import (
-    TokenVerifyView,
-)
+
 from rest_framework.schemas import get_schema_view
 
 
@@ -34,7 +33,7 @@ urlpatterns = [
         name="register",
     ),
     path("auth/refresh", RefreshView.as_view(), name="refresh"),
-    path("auth/verify", TokenVerifyView.as_view(), name="verify"),
+    path("auth/verify", VerifyView.as_view(), name="verify"),
     path("auth/logout", LogoutView.as_view(), name="logout"),
     path(
         "openapi",

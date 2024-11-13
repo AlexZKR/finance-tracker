@@ -12,7 +12,8 @@ class BaseTestSetup(TestCase):
         cls.logout_url = "/api/auth/logout"
         cls.register_url = "/api/auth/register"
         cls.refresh_url = "/api/auth/refresh"
-        
+        cls.verify_url = "/api/auth/verify"
+
         cls.accounts_list_url = "/api/accounts"
 
         cls.username_user_1 = "testuser1"
@@ -58,6 +59,7 @@ class BaseTestSetup(TestCase):
             custom_name="test_custom_cat",
         )
 
+        cls.jwt_regexp = r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)"
         return super().setUpTestData()
 
     def login_user(self, username, password="1234"):

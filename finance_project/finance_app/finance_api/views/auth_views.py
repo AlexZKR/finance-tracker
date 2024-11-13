@@ -2,17 +2,26 @@ import logging
 
 from ..serializers import UserSerializer
 from ..models import User
-from ..auth import JWTBlackList, RedisJWTAuthentication
+from ..auth import JWTMixin, RedisJWTAuthentication
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
 from rest_framework.viewsets import ModelViewSet
 
 logger = logging.getLogger("__name__")
+
+
+class VerifyView(TokenVerifyView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [RedisJWTAuthentication]
 
 
 class LoginView(TokenObtainPairView):
@@ -41,7 +50,7 @@ class LogoutView(APIView):
                     {"detail": "Access token is required."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            are_blacklisted = JWTBlackList().blacklist_tokens(
+            are_blacklisted = JWTMixin().blacklist_tokens(
                 access_token, refresh_token
             )
             if are_blacklisted:
