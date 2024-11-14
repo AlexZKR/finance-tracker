@@ -11,18 +11,19 @@ logger = logging.getLogger("__name__")
 class JWTMixin:
     def blacklist_tokens(self, *args):
         """
-        Blacklists any number of provided tokens in redis cache
+        Blacklists any number of provided valid tokens in redis cache.
+        1) If any of the tokens is invalid, raises `TokenError`.
+        2) If all tokens are valid, blacklists them and returns `True`
         """
-        for token in args:
-            token_type = self.get_token_type(token)
-            token_class = self.instantiate_token(token_type, token)
-
-            exp_time = int(token_class.lifetime.total_seconds())
-            result = cache.set(key=token, value="blacklisted", timeout=exp_time)
-            if not result:
-                logger.error(f"Failed to cache token {token} to Redis.")
-                return False
-        return True
+        try:
+            for token in args:
+                token_type = self.get_token_type(token)
+                token_class = self.instantiate_token(token_type, token)
+                exp_time = int(token_class.lifetime.total_seconds())
+                cache.set(key=token_class.token, value="blacklisted", timeout=exp_time)
+            return True
+        except TokenError as e:
+            raise TokenError("One of provided tokens is invalid or expired") from e
 
     def instantiate_token(self, token_type, token_string):
         """
@@ -45,12 +46,9 @@ class JWTMixin:
         """
         Decode token to get `token_type` field and get type of token
         """
-        try:
-            token = UntypedToken(token_string)
-            token_type = token.payload.get(settings.SIMPLE_JWT["TOKEN_TYPE_CLAIM"])
-            return token_type
-        except TokenError:
-            return None
+        token = UntypedToken(token_string)
+        token_type = token.payload.get(settings.SIMPLE_JWT["TOKEN_TYPE_CLAIM"])
+        return token_type
 
     def is_in_blacklist(self, token):
         """Return `True` if token is in Redis blacklist"""
