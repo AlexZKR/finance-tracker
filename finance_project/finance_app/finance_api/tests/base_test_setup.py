@@ -1,6 +1,11 @@
+import logging
+from typing import Dict
+
 from django.test import TestCase
 from ..models import User, Account, BaseCategory, UserCategory
 from rest_framework.test import APIClient
+
+logger = logging.getLogger("__name__")
 
 
 class BaseTestSetup(TestCase):
@@ -62,8 +67,30 @@ class BaseTestSetup(TestCase):
         cls.jwt_regexp = r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)"
         return super().setUpTestData()
 
-    def login_user(self, username, password="1234"):
-        """Set up methods for retreiving a logged-in user"""
+    def get_logged_out_tokens(self, username, password="1234") -> Dict[str, str]:
+        """
+        Logins in and loggins out a test user
+        for retreiving a logged-out user tokens.
+
+        """
+        response = self.client.post(
+            self.login_url,
+            {"username": username, "password": password},
+        )
+        response_data = response.json()
+        self.client.post(
+            self.logout_url,
+            {"access": response_data["access"], "refresh": response_data["refresh"]},
+            headers={"Authorization": f"Bearer {response_data["access"]}"},
+        )
+        return {
+            "Authorization_header": f"Bearer {response_data["access"]}",
+            "access": response_data["access"],
+            "refresh": response_data["refresh"],
+        }
+
+    def get_logged_in_tokens(self, username, password="1234") -> Dict[str, str]:
+        """Logins in a test user for retreiving logged-in user tokens"""
         response = self.client.post(
             self.login_url,
             {"username": username, "password": password},
@@ -75,7 +102,7 @@ class BaseTestSetup(TestCase):
             "refresh": response_data["refresh"],
         }
 
-    def login_admin(self):
+    def get_logged_in_admin_tokens(self) -> Dict[str, str]:
         """Set up methods for retreiving a logged-in admin"""
 
         response = self.client.post(

@@ -1,5 +1,5 @@
 import logging
-from .base_test_setup import BaseTestSetup
+from ..base_test_setup import BaseTestSetup
 from rest_framework import status
 
 from django.core.cache import cache
@@ -13,7 +13,7 @@ class VerifyAuthEndpointTest(BaseTestSetup):
         """
         Assert that verify endpoint is restricted only for authenticated users
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.verify_url,
             data={"refresh": creds["access"]},  # not providing auth header
@@ -24,7 +24,7 @@ class VerifyAuthEndpointTest(BaseTestSetup):
         """
         Assert that authenticated user can verify any token
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.verify_url,
             data={"token": creds["refresh"]},
@@ -42,7 +42,7 @@ class RefreshAuthEndpointTest(BaseTestSetup):
         """
         Assert that refresh endpoint is restricted only for authenticated users
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.refresh_url,
             data={"refresh": creds["access"]},  # not providing auth header
@@ -58,7 +58,7 @@ class RefreshAuthEndpointTest(BaseTestSetup):
         Assert that user can refresh his access token using refresh token
         and that response contains new access token
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.refresh_url,
             data={"refresh": creds["refresh"]},
@@ -90,12 +90,12 @@ class LogoutAuthEndpointTest(BaseTestSetup):
         self.assertEqual(reading, True)
         cache.delete(tmp)
 
-    def test_double_logout(self):
+    def test_protected_endpoint_after_logout(self):
         """
         Test if a user that is logged out cannot use protected endpoints with
         the same tokens
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.logout_url,
             data={"access": creds["access"], "refresh": creds["refresh"]},
@@ -107,10 +107,14 @@ class LogoutAuthEndpointTest(BaseTestSetup):
             data={"access": creds["access"], "refresh": creds["refresh"]},
             headers={"Authorization": f"Bearer {creds["access"]}"},
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_401_UNAUTHORIZED,
+            msg="A protected endpoint was accessed after logout",
+        )
 
     def test_logout_view(self):
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.logout_url,
             data={"access": creds["access"], "refresh": creds["refresh"]},
@@ -122,7 +126,7 @@ class LogoutAuthEndpointTest(BaseTestSetup):
         """
         An authorized request must include Authorization header with JWT
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         response = self.client.post(
             self.logout_url,
             data={"access": creds["access"], "refresh": creds["refresh"]},

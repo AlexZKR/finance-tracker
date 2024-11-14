@@ -1,9 +1,8 @@
 import logging
 from datetime import timedelta
-from .base_test_setup import BaseTestSetup
-from rest_framework import status
+from ..base_test_setup import BaseTestSetup
 from rest_framework_simplejwt.tokens import AccessToken
-from ..auth import TokenVerifyRedisSerializer, RefreshTokenRedisSerializer
+from ...auth import TokenVerifyRedisSerializer, RefreshTokenRedisSerializer
 
 logger = logging.getLogger("__name__")
 
@@ -25,26 +24,18 @@ class TokenVerifyRedisSerializerTest(BaseTestSetup):
         """
         Assert that token that is is blacklisted is not verified by serializer
         """
-        creds = self.login_user(self.username_user_1)
-        response = self.client.post(
-            self.logout_url,
-            headers={"Authorization": f"Bearer {creds["access"]}"},
-            data={
-                "refresh": creds["refresh"],
-                "access": creds["access"],
-            },
+        logged_out_creds = self.get_logged_out_tokens(self.username_user_1)
+
+        serializer = TokenVerifyRedisSerializer(
+            data={"token": logged_out_creds["access"]}
         )
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_204_NO_CONTENT,
-            msg="Failed to logout test user before testing verifying blacklisted tokens",
-        )
-        serializer = TokenVerifyRedisSerializer(data={"token": creds["access"]})
         self.assertFalse(
             expr=serializer.is_valid(),
             msg="VerifySerializer did not recognize blacklisted access token",
         )
-        serializer = TokenVerifyRedisSerializer(data={"token": creds["refresh"]})
+        serializer = TokenVerifyRedisSerializer(
+            data={"token": logged_out_creds["refresh"]}
+        )
         self.assertFalse(
             expr=serializer.is_valid(),
             msg="VerifySerializer did not recognize blacklisted refresh token",
@@ -71,7 +62,7 @@ class TokenRefreshRedisSerializerTest(BaseTestSetup):
         """
         Assert that access token cant be used for refreshing
         """
-        creds = self.login_user(self.username_user_1)
+        creds = self.get_logged_in_tokens(self.username_user_1)
         serializer = RefreshTokenRedisSerializer(data={"access": creds["access"]})
         self.assertFalse(
             expr=serializer.is_valid(),
