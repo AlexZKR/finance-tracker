@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import environ
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,11 +84,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-
+TESTING = "test" in sys.argv
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL"),
+        "LOCATION": env("REDIS_TEST_URL") if TESTING else env("REDIS_PROD_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": env("REDIS_PASSWORD"),
