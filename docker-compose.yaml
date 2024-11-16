@@ -10,9 +10,9 @@ services:
       - ./finance_project/finance_app:/app
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_PROD_URL=${REDIS_PROD_URL}
+      - REDIS_TEST_URL=${REDIS_TEST_URL}
       - DJANGO_SECRET=${DJANGO_SECRET}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     depends_on:

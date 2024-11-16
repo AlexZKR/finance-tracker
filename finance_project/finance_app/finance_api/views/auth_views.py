@@ -50,15 +50,11 @@ class LogoutView(APIView):
                     {"detail": "Access token is required."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            are_blacklisted = JWTMixin().blacklist_tokens(
-                access_token, refresh_token
+            JWTMixin().blacklist_tokens(access_token, refresh_token)
+            return Response(
+                {"detail": "Logout successful"},
+                status=status.HTTP_204_NO_CONTENT,
             )
-            if are_blacklisted:
-                return Response(
-                    {"detail": "Logout successful"},
-                    status=status.HTTP_204_NO_CONTENT,
-                )
-
         except Exception as e:
             logger.error(f"Logout failed: {e}")
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

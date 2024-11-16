@@ -5,7 +5,7 @@ from .base_test_setup import BaseTestSetup
 class AccountViewsTest(BaseTestSetup):
     def test_user_cant_retreive_others_account(self):
         "Ensure that user can't retreive the account of other user by id"
-        user_1_cred = super().login_user(username=self.username_user_1)
+        user_1_cred = super().get_logged_in_tokens(username=self.username_user_1)
         response = self.client.get(
             path=f"{self.accounts_list_url}/{self.test_account_user_2.id}",
             headers={"Authorization": user_1_cred["Authorization_header"]},
@@ -14,7 +14,7 @@ class AccountViewsTest(BaseTestSetup):
 
     def test_user_can_retreive_his_account(self):
         "Ensure that user can retreive his account details by id"
-        user_cred = super().login_user(username=self.username_user_1)
+        user_cred = super().get_logged_in_tokens(username=self.username_user_1)
         response = self.client.get(
             path=f"{self.accounts_list_url}/{self.test_account_user_1.id}",
             headers={"Authorization": user_cred["Authorization_header"]},
@@ -26,16 +26,22 @@ class AccountViewsTest(BaseTestSetup):
 
     def test_admin_can_retreive_any_account(self):
         "Ensure that only admin can get any account by id"
-        admin_cred = super().login_admin()
+        admin_cred = super().get_logged_in_admin_tokens()
+        test_account_id = self.test_account_user_1.id
         response = self.client.get(
-            path=f"{self.accounts_list_url}/1",
+            path=f"{self.accounts_list_url}/{test_account_id}",
             headers={"Authorization": admin_cred["Authorization_header"]},
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            msg="Account list endpoint did not return 200 OK \
+            after admin tried to get ususal user's account by id",
+        )
 
     def test_retrieve_account_list_for_usual_authorized_user(self):
         "Ensure that auth-ed user gets his account list"
-        creds = super().login_user(username=self.username_user_1)
+        creds = super().get_logged_in_tokens(username=self.username_user_1)
         response = self.client.get(
             path=self.accounts_list_url,
             headers={"Authorization": creds["Authorization_header"]},
