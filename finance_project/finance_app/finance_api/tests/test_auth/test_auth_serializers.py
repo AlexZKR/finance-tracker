@@ -1,13 +1,13 @@
 import logging
 from datetime import timedelta
-from ..base_test_setup import BaseTestSetup
+from .base_auth_test_setup import BaseAuthTestSetup
 from rest_framework_simplejwt.tokens import AccessToken
 from ...auth import TokenVerifyRedisSerializer, RefreshTokenRedisSerializer
 
 logger = logging.getLogger("__name__")
 
 
-class TokenVerifyRedisSerializerTest(BaseTestSetup):
+class TokenVerifyRedisSerializerTest(BaseAuthTestSetup):
     def test_expired_token_is_not_verified(self):
         """
         Assert that expired token is not verified by verify serializer
@@ -53,7 +53,7 @@ class TokenVerifyRedisSerializerTest(BaseTestSetup):
         )
 
 
-class TokenRefreshRedisSerializerTest(BaseTestSetup):
+class TokenRefreshRedisSerializerTest(BaseAuthTestSetup):
     """
     Test RefreshTokenRedisSerializer
     """

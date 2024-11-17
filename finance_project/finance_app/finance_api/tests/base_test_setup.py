@@ -1,8 +1,8 @@
 import logging
-from typing import Dict
+
 
 from django.test import TestCase
-from ..models import User, BaseCategory, UserCategory
+from ..models import User
 from rest_framework.test import APIClient
 
 logger = logging.getLogger("__name__")
@@ -10,7 +10,7 @@ logger = logging.getLogger("__name__")
 
 class BaseTestSetup(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUp(cls):
         cls.client = APIClient()
 
         cls.login_url = "/api/auth/login"
@@ -19,7 +19,7 @@ class BaseTestSetup(TestCase):
         cls.refresh_url = "/api/auth/refresh"
         cls.verify_url = "/api/auth/verify"
 
-        cls.accounts_list_url = "/api/accounts"
+        cls.accounts_url = "/api/accounts"
 
         cls.username_user_1 = "testuser1"
         cls.username_user_2 = "testuser2"
@@ -47,69 +47,13 @@ class BaseTestSetup(TestCase):
             password=cls.password,
         )
 
-        
-
-        cls.test_base_category = BaseCategory.objects.create(name="groceries")
-        cls.custom_name = "custom name"
-
-        cls.base_category = BaseCategory.objects.create(name="test_base_cat")
-        cls.user_category = UserCategory.objects.create(
-            user=cls.test_user_1,
-            base_category=cls.base_category,
-            custom_name="test_custom_cat",
-        )
-
-        cls.jwt_regexp = r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)"
-        return super().setUpTestData()
-
-    def get_logged_out_tokens(self, username, password="1234") -> Dict[str, str]:
-        """
-        Logins in and loggins out a test user
-        for retreiving a logged-out user tokens.
-
-        """
+    def get_auth_header(self, username, password="1234", admin=False) -> str:
+        """Logins in a test user for retreiving valid authentication header"""
+        if admin:
+            username = self.username_admin
         response = self.client.post(
             self.login_url,
             {"username": username, "password": password},
         )
         response_data = response.json()
-        self.client.post(
-            self.logout_url,
-            {"access": response_data["access"], "refresh": response_data["refresh"]},
-            headers={"Authorization": f"Bearer {response_data["access"]}"},
-        )
-        return {
-            "Authorization_header": f"Bearer {response_data["access"]}",
-            "access": response_data["access"],
-            "refresh": response_data["refresh"],
-        }
-
-    def get_logged_in_tokens(self, username, password="1234") -> Dict[str, str]:
-        """Logins in a test user for retreiving logged-in user tokens"""
-        response = self.client.post(
-            self.login_url,
-            {"username": username, "password": password},
-        )
-        response_data = response.json()
-        return {
-            "Authorization_header": f"Bearer {response_data["access"]}",
-            "access": response_data["access"],
-            "refresh": response_data["refresh"],
-        }
-
-    def get_logged_in_admin_tokens(self) -> Dict[str, str]:
-        """Set up methods for retreiving a logged-in admin"""
-
-        response = self.client.post(
-            self.login_url,
-            {
-                "username": self.username_admin,
-                "password": self.password,
-            },
-        )
-        response_data = response.json()
-        return {
-            "Authorization_header": f"Bearer {response_data["access"]}",
-            "access": response_data["access"],
-            "refresh": response_data["refresh"],
-        }
+        return {"Authorization": f"Bearer {response_data["access"]}"}

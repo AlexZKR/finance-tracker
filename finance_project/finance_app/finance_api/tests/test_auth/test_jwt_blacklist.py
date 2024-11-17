@@ -1,12 +1,12 @@
 from datetime import timedelta
 
-from ..base_test_setup import BaseTestSetup
+from .base_auth_test_setup import BaseAuthTestSetup
 from ...auth import JWTMixin
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-class JWTBlackListMixinTest(BaseTestSetup):
+class JWTBlackListMixinTest(BaseAuthTestSetup):
     """
     Test JWT blacklist mixin logic
     """

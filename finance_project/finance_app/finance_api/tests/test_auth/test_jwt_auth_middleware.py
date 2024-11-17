@@ -1,6 +1,6 @@
 import logging
 from django.test.client import RequestFactory
-from ..base_test_setup import BaseTestSetup
+from .base_auth_test_setup import BaseAuthTestSetup
 from ...auth.authentication import RedisJWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import AccessToken
@@ -9,7 +9,7 @@ from ...models import User
 logger = logging.getLogger("__name__")
 
 
-class RedisJWTAuthenticationTest(BaseTestSetup):
+class RedisJWTAuthenticationTest(BaseAuthTestSetup):
     """
     Test RefreshTokenRedisSerializer
     """

@@ -1,5 +1,5 @@
 import logging
-from ..base_test_setup import BaseTestSetup
+from .base_auth_test_setup import BaseAuthTestSetup
 from rest_framework import status
 
 from django.core.cache import cache
@@ -8,7 +8,7 @@ from django.core.cache import cache
 logger = logging.getLogger("__name__")
 
 
-class VerifyAuthEndpointTest(BaseTestSetup):
+class VerifyAuthEndpointTest(BaseAuthTestSetup):
     def test_verify_endpoint_is_authenticated_only(self):
         """
         Assert that verify endpoint is restricted only for authenticated users
@@ -33,7 +33,7 @@ class VerifyAuthEndpointTest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class RefreshAuthEndpointTest(BaseTestSetup):
+class RefreshAuthEndpointTest(BaseAuthTestSetup):
     """
     Test refresh tokens endpoint
     """
@@ -76,7 +76,7 @@ class RefreshAuthEndpointTest(BaseTestSetup):
         )
 
 
-class LogoutAuthEndpointTest(BaseTestSetup):
+class LogoutAuthEndpointTest(BaseAuthTestSetup):
     def test_redis_read_write(self):
         """
         Test reading and writing to redis db
@@ -135,7 +135,7 @@ class LogoutAuthEndpointTest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class LoginAuthEndpointTest(BaseTestSetup):
+class LoginAuthEndpointTest(BaseAuthTestSetup):
     def test_valid_user_login(self):
         response = self.client.post(
             self.login_url,
@@ -152,7 +152,7 @@ class LoginAuthEndpointTest(BaseTestSetup):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class RegistrarionAuthEndpointTest(BaseTestSetup):
+class RegistrarionAuthEndpointTest(BaseAuthTestSetup):
     def test_valid_user_registration(self):
         "Valid test case"
         response = self.client.post(
