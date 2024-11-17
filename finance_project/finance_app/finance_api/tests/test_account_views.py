@@ -12,7 +12,23 @@ class AccountViewsTest(BaseTestSetup):
             user=self.test_user_2, name="test_acc_2", amount=1000
         )
 
-    def test_user_can_create_valid_account(self):
+    def test_user_can_update_valid_account(self):
+        """
+        Assert that user can update an account with valid data
+        """
+        user_1_cred = super().get_logged_in_tokens(username=self.username_user_1)
+        response = self.client.get(
+            path=f"{self.accounts_list_url}/{self.test_account_user_1.id}",
+            headers={"Authorization": user_1_cred["Authorization_header"]},
+        )
+        
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            msg="Valid post request for account creation did not return 201 Created ",
+        )
+
+    def test_user_can_update_valid_account(self):
         """
         Assert that user can create an account with valid data
         """
@@ -25,7 +41,11 @@ class AccountViewsTest(BaseTestSetup):
             },
             headers={"Authorization": user_1_cred["Authorization_header"]},
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            msg="Valid post request for account creation did not return 201 Created ",
+        )
 
     def test_user_cant_retreive_others_account(self):
         "Ensure that user can't retreive the account of other user by id"

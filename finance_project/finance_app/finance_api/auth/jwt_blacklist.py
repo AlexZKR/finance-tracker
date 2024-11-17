@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.conf import settings
 from rest_framework_simplejwt.tokens import UntypedToken, AccessToken, RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-
+from ..utils import get_auth_token_class_objects
 
 logger = logging.getLogger("__name__")
 
@@ -50,8 +50,33 @@ class JWTMixin:
         token_type = token.payload.get(settings.SIMPLE_JWT["TOKEN_TYPE_CLAIM"])
         return token_type
 
+    def is_token_allowed_for_auth(self, token):
+        """
+        Asserts that token is of type that is configured to use
+        to authenticate requests in `settings.SIMPLE_JWT.AUTH_TOKEN_CLASSES`
+        """
+        token_type = self.get_token_type(token)
+        token_instance = self.instantiate_token(token_type, token)
+
+        class_objects = get_auth_token_class_objects()
+
+        if not isinstance(token_instance, tuple(class_objects)):
+            return False
+
+        return True
+
     def is_in_blacklist(self, token):
         """Return `True` if token is in Redis blacklist"""
         if cache.get(token):
             return True
         return False
+
+    def get_token(self, request):
+        """
+        Checks request headers for `Authorization` header and returns it contents.
+        Returns `None` if header does not exist
+        """
+        if request.headers.get("Authorization"):
+            token = request.headers.get("Authorization").split(" ")[1]
+            return token
+        return None

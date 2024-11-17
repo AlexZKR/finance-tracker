@@ -2,7 +2,7 @@ import logging
 from typing import Dict
 
 from django.test import TestCase
-from ..models import User, Account, BaseCategory, UserCategory
+from ..models import User, BaseCategory, UserCategory
 from rest_framework.test import APIClient
 
 logger = logging.getLogger("__name__")
