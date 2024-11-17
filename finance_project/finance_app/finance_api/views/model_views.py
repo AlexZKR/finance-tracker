@@ -19,6 +19,9 @@ class AccountViewSet(ModelViewSet):
     serializer_class = AccountSerializer
     permission_classes = [IsOwnerOrAdmin]
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             raise PermissionDenied("You must be logged in to access this resource.")

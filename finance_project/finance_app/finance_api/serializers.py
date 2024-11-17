@@ -29,10 +29,10 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    transactions = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Transaction.objects.all()
-    )
     user_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    transactions = serializers.PrimaryKeyRelatedField(
+        many=True, allow_null=True, read_only=True
+    )
 
     class Meta:
         model = Account

@@ -1,8 +1,32 @@
 from rest_framework import status
 from .base_test_setup import BaseTestSetup
+from ..models import Account
 
 
 class AccountViewsTest(BaseTestSetup):
+    def setUp(self):
+        self.test_account_user_1 = Account.objects.create(
+            user=self.test_user_1, name="test_acc", amount=1000
+        )
+        self.test_account_user_2 = Account.objects.create(
+            user=self.test_user_2, name="test_acc_2", amount=1000
+        )
+
+    def test_user_can_create_valid_account(self):
+        """
+        Assert that user can create an account with valid data
+        """
+        user_1_cred = super().get_logged_in_tokens(username=self.username_user_1)
+        response = self.client.post(
+            path=f"{self.accounts_list_url}",
+            data={
+                "name": "new_test_account",
+                "amount": 1000,
+            },
+            headers={"Authorization": user_1_cred["Authorization_header"]},
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_user_cant_retreive_others_account(self):
         "Ensure that user can't retreive the account of other user by id"
         user_1_cred = super().get_logged_in_tokens(username=self.username_user_1)

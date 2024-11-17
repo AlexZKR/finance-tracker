@@ -47,12 +47,7 @@ class BaseTestSetup(TestCase):
             password=cls.password,
         )
 
-        cls.test_account_user_1 = Account.objects.create(
-            user=cls.test_user_1, name="test_acc", amount=1000
-        )
-        cls.test_account_user_2 = Account.objects.create(
-            user=cls.test_user_2, name="test_acc_2", amount=1000
-        )
+        
 
         cls.test_base_category = BaseCategory.objects.create(name="groceries")
         cls.custom_name = "custom name"
