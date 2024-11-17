@@ -34,6 +34,14 @@ class AccountSerializer(serializers.ModelSerializer):
         many=True, allow_null=True, read_only=True
     )
 
+    def validate_amount(self, value):
+        """
+        Check that amount is greater than 0
+        """
+        if value < 0:
+            raise serializers.ValidationError("Amount must be greater than zero!")
+        return value
+
     class Meta:
         model = Account
         fields = [

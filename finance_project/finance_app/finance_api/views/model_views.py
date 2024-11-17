@@ -20,7 +20,20 @@ class AccountViewSet(ModelViewSet):
     permission_classes = [IsOwnerOrAdmin]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        logger.info(
+            f"Creating account {self.request.data.get("id")} with data: {self.request.data} for user {self.request.user}"
+        )
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        logger.info(
+            f"Updating account {self.request.data.get("id")}"
+            f" with data: {self.request.data}"
+            f" for user {self.request.user}. Partially {serializer.partial}"
+        )
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
