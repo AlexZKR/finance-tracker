@@ -1,17 +1,32 @@
 from datetime import timedelta
 
-from ..base_test_setup import BaseTestSetup
+from .base_auth_test_setup import BaseAuthTestSetup
 from ...auth import JWTMixin
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
 
 
-class JWTBlackListMixinTest(BaseTestSetup):
+class JWTBlackListMixinTest(BaseAuthTestSetup):
     """
     Test JWT blacklist mixin logic
     """
 
-    def test_expired_token_raises_exception_when_blacklisted(self):
+    def test_expired_token_raises_exception_when_tested_for_auth_eligibility(self):
+        """
+        Assert that expired token raises AuthenticationFailed when provided for auth
+        """
+        expired_token = AccessToken()
+        expired_token.lifetime = timedelta(microseconds=1)
+        mixin = JWTMixin()
+
+        with self.assertRaises(
+            TokenError,
+            msg="JWT mixin did not raise TokenError after \
+                providing one expired token",
+        ):
+            mixin.is_token_allowed_for_auth(expired_token)
+
+    def test_expired_token_raises_exception_when_tested_for_auth_elegebility(self):
         """
         Assert that expired token can't be blacklisted by mixin
         """

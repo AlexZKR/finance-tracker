@@ -13,7 +13,11 @@ from .views import (
 )
 from rest_framework.permissions import AllowAny
 
-from rest_framework.schemas import get_schema_view
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 
 router = DefaultRouter(trailing_slash=False)
@@ -36,13 +40,8 @@ urlpatterns = [
     path("auth/verify", VerifyView.as_view(), name="verify"),
     path("auth/logout", LogoutView.as_view(), name="logout"),
     path(
-        "openapi",
-        get_schema_view(
-            title="Personal finance tracker app",
-            description="Finance tracker API",
-            version="1.0.0",
-            permission_classes=[AllowAny],
-        ),
-        name="openapi-schema",
+        "api/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
     ),
 ]

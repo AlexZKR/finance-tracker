@@ -29,10 +29,18 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    transactions = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Transaction.objects.all()
-    )
     user_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    transactions = serializers.PrimaryKeyRelatedField(
+        many=True, allow_null=True, read_only=True
+    )
+
+    def validate_amount(self, value):
+        """
+        Check that amount is greater than 0
+        """
+        if value < 0:
+            raise serializers.ValidationError("Amount must be greater than zero!")
+        return value
 
     class Meta:
         model = Account

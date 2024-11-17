@@ -24,11 +24,26 @@ class User(AbstractUser):
 
 
 class Account(models.Model):
-    name = models.CharField(max_length=100)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="BYN")
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    name = models.CharField(verbose_name="account's name", max_length=100)
+    currency = models.CharField(
+        verbose_name="currency of the account",
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default="BYN",
+    )
+    amount = models.DecimalField(
+        verbose_name="account's money amount",
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
+    user = models.ForeignKey(
+        User,
+        verbose_name="account's holder",
+        on_delete=models.CASCADE,
+        related_name="accounts",
+    )
 
     def clean(self):
         if self.amount < 0:
@@ -47,6 +62,9 @@ class BaseCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name_plural = "base categories"
 
 
 class UserCategory(models.Model):
@@ -71,22 +89,51 @@ class UserCategory(models.Model):
     def __str__(self):
         return self.custom_name if self.custom_name else self.base_category.name
 
+    class Meta:
+        verbose_name_plural = "user categories"
+
 
 class Transaction(models.Model):
     account = models.ForeignKey(
-        Account, on_delete=models.CASCADE, related_name="transactions"
+        Account,
+        verbose_name="transaction's account",
+        on_delete=models.CASCADE,
+        related_name="transactions",
     )
     category = models.ForeignKey(
-        UserCategory, on_delete=models.SET_DEFAULT, default="null_category", blank=False
+        UserCategory,
+        verbose_name="transaction category",
+        on_delete=models.SET_DEFAULT,
+        default="null_category",
+        blank=False,
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="transaction")
+    user = models.ForeignKey(
+        User,
+        verbose_name="transaction's user",
+        on_delete=models.CASCADE,
+        related_name="transaction",
+    )
 
     transaction_type = models.CharField(
-        choices=TRANSACTION_TYPES, max_length=2, default="EX"
+        verbose_name="the type of transaction",
+        choices=TRANSACTION_TYPES,
+        max_length=2,
+        default="EX",
     )
-    date = models.DateField(auto_now=False, auto_now_add=True)
-    description = models.TextField(max_length=200)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField(
+        verbose_name="date on which transaction was made",
+        auto_now=False,
+        auto_now_add=True,
+    )
+    description = models.TextField(
+        verbose_name="description of the transaction",
+        max_length=200,
+        blank=True,
+        null=True,
+    )
+    amount = models.DecimalField(
+        verbose_name="amount of the transaction", max_digits=10, decimal_places=2
+    )
 
     def __str__(self):
         return f"{self.account} - {self.transaction_type} - {self.amount}"
